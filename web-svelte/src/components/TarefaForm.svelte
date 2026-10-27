@@ -1,67 +1,62 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
-  const dispatch = createEventDispatcher();
+  let { onAdicionar } = $props();
+  let descricao = $state('');
+  let enviando = $state(false);
 
-  let descricao = '';
-  let erro = '';
+  async function handleSubmit(event) {
+    event.preventDefault();
+    const texto = descricao.trim();
+    if (!texto) return;
 
-  function handleSubmit() {
-    const textoLimpo = descricao.trim();
-    if (!textoLimpo) {
-      erro = 'A descrição da tarefa não pode estar vazia.';
-      return;
+    enviando = true;
+    try {
+      await onAdicionar(texto);
+      descricao = '';
+    } finally {
+      enviando = false;
     }
-    erro = '';
-    dispatch('adicionar', { descricao: textoLimpo });
-    descricao = '';
   }
 </script>
 
-<form class="card-form" on:submit|preventDefault={handleSubmit}>
+<form class="form-tarefa card" onsubmit={handleSubmit}>
   <div class="input-group">
     <input
       type="text"
       placeholder="O que você precisa fazer hoje?"
       bind:value={descricao}
-      class:input-error={erro}
+      disabled={enviando}
     />
-    <button type="submit" class="btn btn-primary">
-      <span class="icon">➕</span> Adicionar
+    <button type="submit" class="btn btn-primary" disabled={enviando || !descricao.trim()}>
+      {enviando ? 'Adicionando...' : '+ Adicionar'}
     </button>
   </div>
-  {#if erro}
-    <p class="msg-erro">{erro}</p>
-  {/if}
 </form>
 
 <style>
-  .card-form {
+  .form-tarefa {
     margin-bottom: 1.5rem;
+    padding: 1.25rem;
   }
+
   .input-group {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.75rem;
   }
-  input {
+
+  input[type='text'] {
     flex: 1;
     padding: 0.75rem 1rem;
-    font-size: 1rem;
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    background: var(--bg-card);
+    font-size: 1rem;
     color: var(--text-main);
+    background: #fdfdfd;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color 0.15s ease-in-out;
   }
-  input:focus {
-    border-color: var(--primary);
-  }
-  input.input-error {
-    border-color: var(--danger);
-  }
-  .msg-erro {
-    color: var(--danger);
-    font-size: 0.85rem;
-    margin-top: 0.4rem;
+
+  input[type='text']:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(255, 62, 0, 0.15);
   }
 </style>
